@@ -88,6 +88,8 @@ public class RegistroFicheros {
 
             }
 
+            System.out.println("se ha asignado su i automaticamente: " + id);
+
         }
 
 
@@ -95,10 +97,34 @@ public class RegistroFicheros {
 
     }
 
-    public void guardarDatos () {
+    public void guardarClientes() {
 
-        
+        try {
 
+            ArrayList<String> lineas = new ArrayList<>();
+
+            for (int i = 0; i < Clientes.size(); i++) {
+
+                Clientes cliente = Clientes.get(i);
+
+                String linea =
+                        cliente.getId() + ";"
+                                + cliente.getNombre() + ";"
+                                + cliente.getTel() + ";"
+                                + cliente.getMatricula();
+
+                lineas.add(linea);
+            }
+
+
+            Files.write(archivosClientes, lineas);
+
+        } catch (IOException e) {
+
+            System.out.println(
+                    "Error al guardar los clientes."
+            );
+        }
     }
 
 
