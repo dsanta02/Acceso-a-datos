@@ -1,23 +1,35 @@
-import java.util.Date;
+import java.time.LocalDate;
 
 public class Pagos {
 
-    private String id;
-    private String id_cli;
-    private Date fecha;
+    private int identificador;
+    private int identificadorCliente;
+    private LocalDate fecha;
     private double importe;
     private double litros;
-    Combustible combustible;
+    private String combustible;
 
-    public String getId() {
-        return id;
+    // Constructor
+    public Pagos(int identificador, int identificadorCliente, LocalDate fecha,
+                double importe, double litros, String combustible) {
+
+        this.identificador = identificador;
+        this.identificadorCliente = identificadorCliente;
+        this.fecha = fecha;
+        this.importe = importe;
+        this.litros = litros;
+        this.combustible = combustible.trim();
     }
 
-    public String getId_cli() {
-        return id_cli;
+    public int getIdentificador() {
+        return identificador;
     }
 
-    public Date getFecha() {
+    public int getIdentificadorCliente() {
+        return identificadorCliente;
+    }
+
+    public LocalDate getFecha() {
         return fecha;
     }
 
@@ -29,7 +41,27 @@ public class Pagos {
         return litros;
     }
 
-    public Combustible getCombustible() {
+    public String getCombustible() {
         return combustible;
+    }
+
+    public void setIdentificadorCliente(int identificadorCliente) {
+        this.identificadorCliente = identificadorCliente;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public void setImporte(double importe) {
+        this.importe = importe;
+    }
+
+    public void setLitros(double litros) {
+        this.litros = litros;
+    }
+
+    public void setCombustible(String combustible) {
+        this.combustible = combustible.trim();
     }
 }

@@ -8,9 +8,9 @@ public class Clientes {
     public Clientes(int id, String nombre, String tel, String matricula) {
 
         this.id = id;
-        this.nombre = nombre;
-        this.tel = tel;
-        this.matricula = matricula;
+        this.nombre = nombre.trim();
+        this.tel = tel.trim();
+        this.matricula = matricula.trim().toUpperCase();
 
     }
 

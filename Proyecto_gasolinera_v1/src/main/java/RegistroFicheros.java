@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Comparator;
 
 public class RegistroFicheros {
 
@@ -92,7 +93,13 @@ public class RegistroFicheros {
 
         }
 
+        Clientes cli1 = new Clientes(id,nombre,telefono,matricula);
 
+        Clientes.add(cli1);
+
+        guardarClientes();
+
+        System.out.println("se ha registrado el cliente con el id " + id);
 
 
     }
@@ -125,6 +132,47 @@ public class RegistroFicheros {
                     "Error al guardar los clientes."
             );
         }
+    }
+
+    public void listarClientes () {
+
+        if (Clientes.isEmpty()) {
+
+            System.out.println("no hay ningun cliente...");
+
+            return;
+        }
+
+
+        Clientes.sort(new Comparator<Clientes>() {
+            @Override
+            public int compare(Clientes o1, Clientes o2) {
+
+                int resultado = o1.getNombre().compareToIgnoreCase(o2.getNombre()); //primera comparacion
+
+                if (resultado == 0) {
+                    return Integer.compare(o1.getId(), o2.getId()); //segunda comparacion por id
+                }
+
+                return resultado;
+            }
+
+            // 0 → los nombres son iguales ignorando mayúsculas/minúsculas
+            // Número negativo → o1 debe ir antes que o2.
+            // Número positivo → o1 debe ir después que o2.
+        });
+
+        for(int i = 0; i < Clientes.size(); i ++) {
+
+
+            System.out.println("Identificador: " + Clientes.get(i).getId());
+            System.out.println("Nombre: " + Clientes.get(i).getNombre());
+            System.out.println("Teléfono: " + Clientes.get(i).getTel());
+            System.out.println("Matrícula: " + Clientes.get(i).getMatricula());
+            System.out.println("----------------------");
+
+        }
+
     }
 
 
