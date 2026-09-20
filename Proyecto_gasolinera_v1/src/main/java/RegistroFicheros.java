@@ -11,7 +11,7 @@ import java.util.Comparator;
 public class RegistroFicheros {
 
     ArrayList<Clientes> Clientes;
-    ArrayList<Pagos> Pagos;
+    ArrayList<Pagos> pagos;
 
     Scanner teclado;
 
@@ -23,7 +23,7 @@ public class RegistroFicheros {
         this.teclado = teclado;
 
         Clientes = new ArrayList<>();
-        Pagos = new ArrayList<>();
+        pagos = new ArrayList<>();
 
         archivosClientes = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivoClientes.csv");
         archivosPagos = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivosPagos.csv");
@@ -174,6 +174,91 @@ public class RegistroFicheros {
         }
 
     }
+
+    public void buscarClientes() {
+
+        System.out.println("Introduce el texto que quieres buscar:");
+        String texto = teclado.nextLine().trim();
+
+        while (texto.isEmpty()) {
+            System.out.println("El texto no puede estar vacío.");
+            System.out.println("Introduce el texto que quieres buscar:");
+            texto = teclado.nextLine().trim();
+        }
+
+        texto = texto.toLowerCase();
+
+        boolean encontrado = false;
+
+        for (int i = 0; i < Clientes.size(); i++) {
+
+            if (Clientes.get(i).getNombre().toLowerCase().contains(texto)
+                    || Clientes.get(i).getTel().toLowerCase().contains(texto)
+                    || Clientes.get(i).getMatricula().toLowerCase().contains(texto)) {
+
+                encontrado = true;
+
+                System.out.println("Identificador: " + Clientes.get(i).getId());
+                System.out.println("Nombre: " + Clientes.get(i).getNombre());
+                System.out.println("Teléfono: " + Clientes.get(i).getTel());
+                System.out.println("Matrícula: " + Clientes.get(i).getMatricula());
+                System.out.println("----------------------");
+            }
+        }
+
+        if (!encontrado) {
+            System.out.println("No se han encontrado clientes.");
+        }
+
+        Clientes.sort(new Comparator<Clientes>() {
+            @Override
+            public int compare(Clientes o1, Clientes o2) {
+
+                int resultado = o1.getNombre().compareToIgnoreCase(o2.getNombre()); //primera comparacion
+
+                if (resultado == 0) {
+                    return Integer.compare(o1.getId(), o2.getId()); //segunda comparacion por id
+                }
+
+                return resultado;
+            }
+
+            // 0 → los nombres son iguales ignorando mayúsculas/minúsculas
+            // Número negativo → o1 debe ir antes que o2.
+            // Número positivo → o1 debe ir después que o2.
+        });
+
+    }
+
+    public void procesarPago(Clientes c, Pagos p) {
+
+
+
+    }
+
+    public void guardarPago() {
+
+        pagos = new ArrayList<>();
+
+        try {
+
+            for(int i = 0; i < pagos.size(); i ++) {
+
+                Pagos p = pagos.get(i);
+
+                String linea = pagos.get(i).getCombustible();
+                                pagos.get(i).getFecha();
+                                pagos.get(i).getIdentificador();
+
+
+
+            }
+
+        }catch ()
+
+    }
+
+
 
 
 
