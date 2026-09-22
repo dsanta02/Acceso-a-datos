@@ -1,14 +1,17 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public interface ProcesosLeerEscribir {
 
-    boolean guardarClientes();
 
-    boolean guardarPago();
 
-    ArrayList<Clientes> leerClientes();
+    boolean guardarClientes(List<Clientes> clientes);
 
-    ArrayList<Pagos> leerPagos();
+    boolean guardarPago(List<Pagos> pago);
+
+    List<Clientes> leerClientes();
+
+    List<Pagos> leerPagos();
 
     boolean crearArchivo();
 
