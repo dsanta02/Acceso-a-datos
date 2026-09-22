@@ -264,36 +264,6 @@ public class RegistroFicheros {
 
     }
 
-    public void guardarPago() {
-
-        ArrayList<String> lineas = new ArrayList<>();
-
-        try {
-
-            for(int i = 0; i < pagos.size(); i ++) {
-
-
-                String linea = pagos.get(i).getIdentificador() + "; " +
-                        pagos.get(i).getIdentificadorCliente() + " ; " +
-                        pagos.get(i).getFecha() + " ; " +
-                        pagos.get(i).getFecha() + " ; " +
-                        pagos.get(i).getImporte() + " ; " +
-                        pagos.get(i).getLitros() + " ; " +
-                        pagos.get(i).getLitros();
-
-                lineas.add(linea);
-
-            }
-
-            Files.write(archivosPagos, lineas);
-
-        }catch (IOException e) {
-
-            System.out.println(e.getMessage());
-
-        }
-
-    }
 
 
 
