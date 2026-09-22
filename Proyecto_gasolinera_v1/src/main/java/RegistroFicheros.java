@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Comparator;
 
+
 public class RegistroFicheros {
 
     ArrayList<Clientes> Clientes;
@@ -148,10 +149,10 @@ public class RegistroFicheros {
             @Override
             public int compare(Clientes o1, Clientes o2) {
 
-                int resultado = o1.getNombre().compareToIgnoreCase(o2.getNombre()); //primera comparacion
+                int resultado = o1.getNombre().compareToIgnoreCase(o2.getNombre());
 
                 if (resultado == 0) {
-                    return Integer.compare(o1.getId(), o2.getId()); //segunda comparacion por id
+                    return Integer.compare(o1.getId(), o2.getId());
                 }
 
                 return resultado;
@@ -230,7 +231,34 @@ public class RegistroFicheros {
 
     }
 
-    public void procesarPago(Clientes c, Pagos p) {
+    public void procesarPago(Clientes c) {
+
+        if (Clientes.isEmpty()) {
+
+            System.out.println("para procesar un pago debe de darse de alta: ");
+
+        } else {
+
+            listarClientes();
+
+            System.out.println("introduce el id del cliente: ");
+
+            int id = teclado.nextInt();
+
+            if(id <= 0) {
+                System.out.println("el id debe de ser positivo");
+            } else if (id != c.getId()) {
+
+                System.out.println("el id no coincide");
+
+            } else {
+
+
+
+            }
+
+        }
+
 
 
 
@@ -238,23 +266,32 @@ public class RegistroFicheros {
 
     public void guardarPago() {
 
-        pagos = new ArrayList<>();
+        ArrayList<String> lineas = new ArrayList<>();
 
         try {
 
             for(int i = 0; i < pagos.size(); i ++) {
 
-                Pagos p = pagos.get(i);
 
-                String linea = pagos.get(i).getCombustible();
-                                pagos.get(i).getFecha();
-                                pagos.get(i).getIdentificador();
+                String linea = pagos.get(i).getIdentificador() + "; " +
+                        pagos.get(i).getIdentificadorCliente() + " ; " +
+                        pagos.get(i).getFecha() + " ; " +
+                        pagos.get(i).getFecha() + " ; " +
+                        pagos.get(i).getImporte() + " ; " +
+                        pagos.get(i).getLitros() + " ; " +
+                        pagos.get(i).getLitros();
 
-
+                lineas.add(linea);
 
             }
 
-        }catch ()
+            Files.write(archivosPagos, lineas);
+
+        }catch (IOException e) {
+
+            System.out.println(e.getMessage());
+
+        }
 
     }
 
