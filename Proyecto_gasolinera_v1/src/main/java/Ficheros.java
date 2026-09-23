@@ -7,23 +7,23 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Ficheros implements ProcesosLeerEscribir{
+public class Ficheros implements ProcesosLeerEscribir {
 
-        ArrayList<Clientes> listaCliente;
-        ArrayList<Pagos> listaPagos;
+    ArrayList<Clientes> listaCliente;
+    ArrayList<Pagos> listaPagos;
 
-        Path archivosClientes;
-        Path archivosPagos;
+    Path archivosClientes;
+    Path archivosPagos;
 
-        public Ficheros() {
+    public Ficheros() {
 
-            listaCliente = new ArrayList<>();
-            listaPagos = new ArrayList<>();
+        listaCliente = new ArrayList<>();
+        listaPagos = new ArrayList<>();
 
-            archivosClientes = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivoClientes.csv");
-            archivosPagos = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivosPagos.csv");
+        archivosClientes = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivoClientes.csv");
+        archivosPagos = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivosPagos.csv");
 
-        }
+    }
 
     @Override
     public boolean guardarClientes(List<Clientes> clientes) {
@@ -56,76 +56,71 @@ public class Ficheros implements ProcesosLeerEscribir{
         }
     }
 
-        @Override
-        public boolean guardarPago(List<Pagos> pago) {
+    @Override
+    public boolean guardarPago(List<Pagos> pago) {
 
-            ArrayList<String> datos = new ArrayList<>();
+        ArrayList<String> datos = new ArrayList<>();
 
-            try {
-                for (int i = 0; i < pago.size(); i ++) {
+        try {
+            for (int i = 0; i < pago.size(); i++) {
 
-                    Pagos p = pago.get(i);
+                Pagos p = pago.get(i);
 
-                    String linea = p.getIdentificador() + ";" +
-                            p.getIdentificadorCliente() + ";" +
-                            p.getFecha() + ";" +
-                            p.getImporte() + ";" +
-                            p.getLitros() + ";" +
-                            p.getCombustible();
+                String linea = p.getIdentificador() + ";" +
+                        p.getIdentificadorCliente() + ";" +
+                        p.getFecha() + ";" +
+                        p.getImporte() + ";" +
+                        p.getLitros() + ";" +
+                        p.getCombustible();
 
-                    datos.add(linea);
-                }
-
-                Files.write(archivosPagos, datos);
-                return true;
-
-            }catch (IOException e) {
-
-                System.out.println(e.getMessage());
-
-                return false;
-
+                datos.add(linea);
             }
 
+            Files.write(archivosPagos, datos);
+            return true;
+
+        } catch (IOException e) {
+
+            System.out.println(e.getMessage());
+
+            return false;
 
         }
 
 
+    }
 
 
-        @Override
-        public List<Clientes> leerClientes() {
+    @Override
+    public List<Clientes> leerClientes() {
 
-            List<Clientes> lista = new ArrayList<>();
+        List<Clientes> lista = new ArrayList<>();
 
-                try {
+        try {
 
-                    List<String> lineas = Files.readAllLines(archivosClientes);
+            List<String> lineas = Files.readAllLines(archivosClientes);
 
-                    for (int i = 0; i < lineas.size(); i++) {
+            for (int i = 0; i < lineas.size(); i++) {
 
-                        String linea = lineas.get(i);
+                String linea = lineas.get(i);
 
-                        Clientes cliente = new Clientes(
-                                Integer.parseInt(linea.split(";")[0]),
-                                linea.split(";")[1],
-                                linea.split(";")[2],
-                                linea.split(";")[3]
-                        );
+                Clientes cliente = new Clientes(
+                        Integer.parseInt(linea.split(";")[0]),
+                        linea.split(";")[1],
+                        linea.split(";")[2],
+                        linea.split(";")[3]
+                );
 
-                        lista.add(cliente);
-                    }
+                lista.add(cliente);
+            }
 
-                } catch (IOException e) {
+        } catch (IOException e) {
 
-                    System.out.println("Error al leer: " + e.getMessage());
-                }
-
-                return lista;
+            System.out.println("Error al leer: " + e.getMessage());
         }
 
-
-
+        return lista;
+    }
 
 
     @Override
@@ -167,9 +162,36 @@ public class Ficheros implements ProcesosLeerEscribir{
 
     @Override
     public boolean crearArchivo() {
-        return false;
+
+        try {
+
+            if (!Files.exists(archivosClientes.getParent())) {
+                Files.createDirectories(archivosClientes.getParent());
+            }
+
+            if (!Files.exists(archivosClientes)) {
+                Files.createFile(archivosClientes);
+            }
+
+            if (!Files.exists(archivosPagos)) {
+                Files.createFile(archivosPagos);
+            }
+
+            return true;
+
+        } catch (IOException e) {
+
+            System.out.println("Error al crear los archivos.");
+            return false;
+        }
     }
 
+    public String escapar(String texto) {
+
+        texto = texto.replace("\"", "\"\"");
+
+        return "\"" + texto + "\"";
+    }
 
 }
 
