@@ -9,19 +9,14 @@ import java.util.List;
 
 public class Ficheros implements ProcesosLeerEscribir {
 
-    ArrayList<Clientes> listaCliente;
-    ArrayList<Pagos> listaPagos;
-
     Path archivosClientes;
     Path archivosPagos;
 
     public Ficheros() {
 
-        listaCliente = new ArrayList<>();
-        listaPagos = new ArrayList<>();
 
-        archivosClientes = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivoClientes.csv");
-        archivosPagos = Paths.get("D:\\Users\\Alumno Mañana\\Desktop\\Gestion_Gasolina\\repo_gitHub\\Proyecto_gasolinera_v1\\src\\archivosPagos.csv");
+        archivosClientes = Paths.get("C:\\Users\\ACER\\Desktop\\prueba\\clientes.csv");
+        archivosPagos = Paths.get("C:\\Users\\ACER\\Desktop\\prueba\\pagos.csv");
 
     }
 
@@ -37,9 +32,9 @@ public class Ficheros implements ProcesosLeerEscribir {
                 Clientes c = clientes.get(i);
 
                 String linea = c.getId() + ";" +
-                        c.getNombre() + ";" +
-                        c.getTel() + ";" +
-                        c.getMatricula();
+                        escapar(c.getNombre()) + ";" +
+                        escapar(c.getTel()) + ";" +
+                        escapar(c.getMatricula());
 
                 datos.add(linea);
             }
@@ -71,7 +66,7 @@ public class Ficheros implements ProcesosLeerEscribir {
                         p.getFecha() + ";" +
                         p.getImporte() + ";" +
                         p.getLitros() + ";" +
-                        p.getCombustible();
+                        escapar(p.getCombustible());
 
                 datos.add(linea);
             }
@@ -104,11 +99,13 @@ public class Ficheros implements ProcesosLeerEscribir {
 
                 String linea = lineas.get(i);
 
+                String[] datos = separar(linea);
+
                 Clientes cliente = new Clientes(
-                        Integer.parseInt(linea.split(";")[0]),
-                        linea.split(";")[1],
-                        linea.split(";")[2],
-                        linea.split(";")[3]
+                        Integer.parseInt(datos[0]),
+                        datos[1],
+                        datos[2],
+                        datos[3]
                 );
 
                 lista.add(cliente);
@@ -138,7 +135,7 @@ public class Ficheros implements ProcesosLeerEscribir {
 
                 String linea = lineas.get(i);
 
-                String[] datos = linea.split(";");
+                String[] datos = separar(linea);
 
                 Pagos pago = new Pagos(
                         Integer.parseInt(datos[0]),
@@ -191,6 +188,46 @@ public class Ficheros implements ProcesosLeerEscribir {
         texto = texto.replace("\"", "\"\"");
 
         return "\"" + texto + "\"";
+    }
+
+    public String[] separar(String linea) {
+
+        ArrayList<String> campos = new ArrayList<>();
+
+        String campo = "";
+        boolean dentroComillas = false;
+
+        for (int i = 0; i < linea.length(); i++) {
+
+            char caracter = linea.charAt(i);
+
+            if (caracter == '"') {
+
+                if (dentroComillas && i + 1 < linea.length()
+                        && linea.charAt(i + 1) == '"') {
+
+                    campo = campo + '"';
+                    i++;
+
+                } else {
+
+                    dentroComillas = !dentroComillas;
+                }
+
+            } else if (caracter == ';' && !dentroComillas) {
+
+                campos.add(campo);
+                campo = "";
+
+            } else {
+
+                campo = campo + caracter;
+            }
+        }
+
+        campos.add(campo);
+
+        return campos.toArray(new String[0]);
     }
 
 }

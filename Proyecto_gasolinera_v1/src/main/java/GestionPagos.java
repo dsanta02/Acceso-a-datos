@@ -1,9 +1,8 @@
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class GestionPagos {
     Scanner sc;
@@ -22,8 +21,7 @@ public class GestionPagos {
 
         c.listarCliente(clientes);
 
-        System.out.println("Introduce el ID del cliente:");
-        int id_cli = sc.nextInt();
+        int id_cli;
 
         do {
             System.out.println("Introduce el ID del cliente:");
@@ -35,34 +33,117 @@ public class GestionPagos {
 
         } while (id_cli <= 0);
 
-
         boolean b = false;
+        String nombreCliente = "";
 
-        for(int i = 0; i < clientes.size(); i ++) {
+        for (int i = 0; i < clientes.size(); i++) {
 
-            if(id_cli == clientes.get(i).getId()) {
+            if (id_cli == clientes.get(i).getId()) {
                 b = true;
+                nombreCliente = clientes.get(i).getNombre();
                 break;
             }
-
         }
 
-        if(b == false) {
-            System.out.println("el id del clinte no existe");
+        if (b == false) {
+            System.out.println("El ID del cliente no existe.");
             return;
         }
 
-        int id = 1;
+        sc.nextLine();
 
-        for(int i = 0; i < pagos.size(); i ++) {
+        System.out.println("Introduce la fecha (dd/MM/yyyy):");
+        String fechaTexto = sc.nextLine();
 
-            if(id <= pagos.get(i).getIdentificador()) {
-                id = pagos.get(i).getIdentificador() + 1;
+        LocalDate fecha;
+
+        if (fechaTexto.isEmpty()) {
+            fecha = LocalDate.now();
+        } else {
+            fecha = LocalDate.parse(
+                    fechaTexto,
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            );
+        }
+
+        double importe;
+
+        do {
+            System.out.println("Introduce el importe:");
+            importe = sc.nextDouble();
+
+            if (importe <= 0) {
+                System.out.println("El importe debe ser positivo.");
             }
 
+        } while (importe <= 0);
+
+        double litros;
+
+        do {
+            System.out.println("Introduce los litros:");
+            litros = sc.nextDouble();
+
+            if (litros <= 0) {
+                System.out.println("Los litros deben ser positivos.");
+            }
+
+        } while (litros <= 0);
+
+        sc.nextLine();
+
+        String combustible;
+
+        do {
+            System.out.println("Introduce el tipo de combustible:");
+            combustible = sc.nextLine().trim().toLowerCase();
+
+            if (!combustible.equals("gasolina") &&
+                    !combustible.equals("diesel")) {
+
+                System.out.println("Combustible no válido.");
+            }
+
+        } while (!combustible.equals("gasolina") &&
+                !combustible.equals("diesel"));
+
+
+        int id = 1;
+
+        for (int i = 0; i < pagos.size(); i++) {
+
+            if (id <= pagos.get(i).getIdentificador()) {
+                id = pagos.get(i).getIdentificador() + 1;
+            }
         }
 
 
+        Pagos p = new Pagos(
+                id,
+                id_cli,
+                fecha,
+                importe,
+                litros,
+                combustible
+        );
+
+        pagos.add(p);
+
+        boolean guardado = c.gestionFicheros.guardarPago(pagos);
+
+        if (guardado) {
+
+            System.out.println("Pago registrado correctamente.");
+            System.out.println("Identificador: " + id);
+            System.out.println("Cliente: " + nombreCliente);
+            System.out.println("Importe: " + importe + " €");
+
+        } else {
+
+            pagos.remove(p);
+            System.out.println("No se ha podido guardar el pago.");
+
+        }
     }
 
     public void consultarPagos(List<Pagos> pagos, List<Clientes> clientes) {

@@ -1,3 +1,4 @@
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
@@ -150,8 +151,8 @@ public class GestionClientes {
         for(int i = 0; i < cliente.size(); i ++) {
 
             if(cliente.get(i).getNombre().toLowerCase().contains(txt) ||
-                cliente.get(i).getMatricula().toLowerCase().contains(txt) ||
-                cliente.get(i).getTel().contains(txt)){
+                    cliente.get(i).getMatricula().toLowerCase().contains(txt) ||
+                    cliente.get(i).getTel().contains(txt)){
 
                 encontrado = true;
 
