@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,15 +10,16 @@ import java.util.List;
 
 public class Ficheros implements ProcesosLeerEscribir {
 
-    Path archivosClientes;
-    Path archivosPagos;
+    private Path archivosClientes;
+    private Path archivosPagos;
+
+    private DateTimeFormatter formatoFecha =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public Ficheros() {
 
-
-        archivosClientes = Paths.get("C:\\Users\\ACER\\Desktop\\prueba\\clientes.csv");
-        archivosPagos = Paths.get("C:\\Users\\ACER\\Desktop\\prueba\\pagos.csv");
-
+        archivosClientes = Paths.get("src/clientes.csv");
+        archivosPagos = Paths.get("src/pagos.csv");
     }
 
     @Override
@@ -39,52 +41,60 @@ public class Ficheros implements ProcesosLeerEscribir {
                 datos.add(linea);
             }
 
-            Files.write(archivosClientes, datos);
+            Files.write(
+                    archivosClientes,
+                    datos,
+                    StandardCharsets.UTF_8
+            );
 
             return true;
 
         } catch (IOException e) {
 
-            System.out.println(e.getMessage());
+            System.out.println("Error al guardar los clientes: "
+                    + e.getMessage());
 
             return false;
         }
     }
 
     @Override
-    public boolean guardarPago(List<Pagos> pago) {
+    public boolean guardarPago(List<Pagos> pagos) {
 
         ArrayList<String> datos = new ArrayList<>();
 
         try {
-            for (int i = 0; i < pago.size(); i++) {
 
-                Pagos p = pago.get(i);
+            for (int i = 0; i < pagos.size(); i++) {
+
+                Pagos p = pagos.get(i);
 
                 String linea = p.getIdentificador() + ";" +
                         p.getIdentificadorCliente() + ";" +
-                        p.getFecha() + ";" +
-                        p.getImporte() + ";" +
-                        p.getLitros() + ";" +
+                        p.getFecha().format(formatoFecha) + ";" +
+                        String.format("%.2f", p.getImporte()) + ";" +
+                        String.format("%.2f", p.getLitros()) + ";" +
                         escapar(p.getCombustible());
 
                 datos.add(linea);
             }
 
-            Files.write(archivosPagos, datos);
+            Files.write(
+                    archivosPagos,
+                    datos,
+                    StandardCharsets.UTF_8
+            );
+
             return true;
 
         } catch (IOException e) {
 
-            System.out.println(e.getMessage());
+            System.out.println("Error al guardar los pagos: "
+                    + e.getMessage());
 
             return false;
-
         }
-
-
     }
-
 
     @Override
     public List<Clientes> leerClientes() {
@@ -93,54 +103,96 @@ public class Ficheros implements ProcesosLeerEscribir {
 
         try {
 
-            List<String> lineas = Files.readAllLines(archivosClientes);
+            List<String> lineas = Files.readAllLines(
+                    archivosClientes,
+                    StandardCharsets.UTF_8
+            );
 
             for (int i = 0; i < lineas.size(); i++) {
 
                 String linea = lineas.get(i);
 
-                String[] datos = separar(linea);
+                String[] datos = separar(linea); //usamos array para ir metido datos 1 por 1
 
-                Clientes cliente = new Clientes(
-                        Integer.parseInt(datos[0]),
-                        datos[1],
-                        datos[2],
-                        datos[3]
+            if (datos.length != 4) { //aqui controlamos el numero de datos
+                System.out.println(
+                        "Error: el registro de clientes de la línea "
+                                + (i + 1) + " no tiene 4 campos."
                 );
 
-                lista.add(cliente);
+                return null;
             }
+
+            Clientes cliente = new Clientes(
+                    Integer.parseInt(datos[0]),
+                    datos[1],
+                    datos[2],
+                    datos[3]
+            );
+
+            lista.add(cliente);
+        }
 
         } catch (IOException e) {
 
-            System.out.println("Error al leer: " + e.getMessage());
+            System.out.println(
+                    "Error al leer los clientes: " + e.getMessage()
+            );
+
+            return null;
+
+        } catch (NumberFormatException e) {
+
+            System.out.println(
+                    "Error: existe un registro de cliente que no se puede interpretar."
+            );
+
+            return null;
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Error: existe un registro de cliente no válido."
+            );
+
+            return null;
         }
 
         return lista;
     }
 
-
     @Override
-    public ArrayList<Pagos> leerPagos() {
+    public List<Pagos> leerPagos() {
 
-        ArrayList<Pagos> lista = new ArrayList<>();
+        List<Pagos> lista = new ArrayList<>();
 
         try {
 
-            List<String> lineas = Files.readAllLines(archivosPagos);
-
-            DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            List<String> lineas = Files.readAllLines(
+                    archivosPagos,
+                    StandardCharsets.UTF_8
+            );
 
             for (int i = 0; i < lineas.size(); i++) {
 
                 String linea = lineas.get(i);
 
-                String[] datos = separar(linea);
+                String[] datos = separar(linea); //usamos array para ir metido datos 1 por 1
+
+                if (datos.length != 6) { //aqui controlamos el numero de datos
+
+                    System.out.println(
+                            "Error: el registro de pagos de la línea "
+                                    + (i + 1) + " no tiene 6 campos."
+                    );
+
+                    return null;
+                }
 
                 Pagos pago = new Pagos(
                         Integer.parseInt(datos[0]),
                         Integer.parseInt(datos[1]),
-                        LocalDate.parse(datos[2], formato),
+                        LocalDate.parse(datos[2], formatoFecha),
                         Double.parseDouble(datos[3].replace(",", ".")),
                         Double.parseDouble(datos[4].replace(",", ".")),
                         datos[5]
@@ -151,7 +203,27 @@ public class Ficheros implements ProcesosLeerEscribir {
 
         } catch (IOException e) {
 
-            System.out.println("Error al leer los pagos: " + e.getMessage());
+            System.out.println(
+                    "Error al leer los pagos: " + e.getMessage()
+            );
+
+            return null;
+
+        } catch (NumberFormatException e) {
+
+            System.out.println(
+                    "Error: existe un registro de pago que no se puede interpretar."
+            );
+
+            return null;
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Error: existe un registro de pago no válido."
+            );
+
+            return null;
         }
 
         return lista;
@@ -162,8 +234,10 @@ public class Ficheros implements ProcesosLeerEscribir {
 
         try {
 
-            if (!Files.exists(archivosClientes.getParent())) {
-                Files.createDirectories(archivosClientes.getParent());
+            Path carpeta = archivosClientes.getParent();
+
+            if (!Files.exists(carpeta)) {
+                Files.createDirectories(carpeta);
             }
 
             if (!Files.exists(archivosClientes)) {
@@ -178,18 +252,21 @@ public class Ficheros implements ProcesosLeerEscribir {
 
         } catch (IOException e) {
 
-            System.out.println("Error al crear los archivos.");
+            System.out.println(
+                    "Error al crear los archivos: " + e.getMessage()
+            );
+
             return false;
         }
     }
-
+    // Añade comillas al texto y duplica las comillas internas para guardarlo correctamente en el CSV.
     public String escapar(String texto) {
 
         texto = texto.replace("\"", "\"\"");
 
         return "\"" + texto + "\"";
     }
-
+    // Separa los campos del CSV respetando los textos que están entre comillas.
     public String[] separar(String linea) {
 
         ArrayList<String> campos = new ArrayList<>();
@@ -203,7 +280,8 @@ public class Ficheros implements ProcesosLeerEscribir {
 
             if (caracter == '"') {
 
-                if (dentroComillas && i + 1 < linea.length()
+                if (dentroComillas
+                        && i + 1 < linea.length()
                         && linea.charAt(i + 1) == '"') {
 
                     campo = campo + '"';
@@ -227,10 +305,14 @@ public class Ficheros implements ProcesosLeerEscribir {
 
         campos.add(campo);
 
+        if (dentroComillas) {
+            throw new IllegalArgumentException(
+                    "Comillas sin cerrar en el registro."
+            );
+        }
+
         return campos.toArray(new String[0]);
     }
-
 }
-
 
 

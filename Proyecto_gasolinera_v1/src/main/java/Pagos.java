@@ -9,7 +9,7 @@ public class Pagos {
     private double litros;
     private String combustible;
 
-    // Constructor
+
     public Pagos(int identificador, int identificadorCliente, LocalDate fecha,
                 double importe, double litros, String combustible) {
 

@@ -1,32 +1,45 @@
 import java.util.List;
 import java.util.Scanner;
-public class Main {
 
+public class Main {
 
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
-        int opcion = 0;
+
         Ficheros c = new Ficheros();
 
-        boolean existe = c.crearArchivo();
 
-        if(existe == false) {
-            System.out.println("no se ha podido crear el archivo debido a la ruta");
+        if (!c.crearArchivo()) {
+
+            System.out.println(
+                    "No se ha podido preparar el almacenamiento."
+            );
+
             return;
         }
 
         List<Clientes> clientes = c.leerClientes();
         List<Pagos> pagos = c.leerPagos();
+
+
+        if (clientes == null || pagos == null) {
+
+            System.out.println(
+                    "No se puede continuar porque existe un problema "
+                            + "con los datos almacenados."
+            );
+
+            return;
+        }
+
         GestionClientes g = new GestionClientes(sc, c);
 
+        int opcion;
 
-        do{
+        do {
 
-
-            c.crearArchivo();
-
-            System.out.println("===GESTION DE GASOLINERA===");
+            System.out.println("=== GESTION DE GASOLINERA ===");
             System.out.println("1. Dar de alta un cliente");
             System.out.println("2. Listar clientes");
             System.out.println("3. Buscar clientes");
@@ -38,36 +51,37 @@ public class Main {
             opcion = sc.nextInt();
 
             if (opcion == 1) {
-                System.out.println("OPCION 1");
 
                 g.darAlta(clientes);
 
             } else if (opcion == 2) {
-                System.out.println("OPCION 2");
+
                 g.listarCliente(clientes);
 
-            } else if(opcion == 3) {
-                System.out.println("OPCION 3");
-                GestionClientes cliente = new GestionClientes(sc, c);
-                cliente.buscarCliente(clientes);
+            } else if (opcion == 3) {
+
+                g.buscarCliente(clientes);
 
             } else if (opcion == 4) {
-                System.out.println("OPCION 4");
-                GestionPagos p = new GestionPagos(sc,g);
+
+                GestionPagos p = new GestionPagos(sc, g);
                 p.procesarPago(pagos, clientes);
 
             } else if (opcion == 5) {
-                System.out.println("OPCION 5");
+
                 GestionPagos p = new GestionPagos(sc, g);
                 p.consultarPagos(pagos, clientes);
 
+            } else if (opcion != 0) {
+
+                System.out.println("Opción no válida.");
+
             }
 
+        } while (opcion != 0);
 
-        }while(opcion != 0);
+        System.out.println("Hasta pronto.");
 
-
-
+        sc.close();
     }
-
 }

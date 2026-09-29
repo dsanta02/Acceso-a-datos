@@ -79,14 +79,27 @@ public class GestionClientes {
 
         }
 
-        Clientes c = new Clientes(id, nombre,tel,matricula);
+        Clientes c = new Clientes(id, nombre, tel, matricula);
 
         clientes.add(c);
 
-        gestionFicheros.guardarClientes(clientes);
+        boolean guardado = gestionFicheros.guardarClientes(clientes);
 
-        System.out.println("el cliente se ha regisrado correctamente con el id " + id );
+        if (guardado) {
 
+            System.out.println(
+                    "El cliente se ha registrado correctamente con el ID " + id
+            );
+
+        } else {
+
+            clientes.remove(c);
+
+            System.out.println(
+                    "No se ha podido guardar el cliente. "
+                            + "El cliente no ha sido registrado."
+            );
+        }
     }
 
     public void listarCliente(List<Clientes> cliente) {
@@ -166,7 +179,7 @@ public class GestionClientes {
 
         }
 
-        if(encontrado == false) {
+        if(!encontrado) {
 
             System.out.println("no se ha encontrado cliente.");
 
