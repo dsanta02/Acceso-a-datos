@@ -31,16 +31,35 @@ public class MigraCSVToJson {
             throw new IOException("NO EXISTE EL ARCHIVO");
         }
 
-        List<String>
+        List<String> clientes = Files.readAllLines(archivosClientes);
+        List<String> pagos = Files.readAllLines(archivosPagos);
+
+        migrarClientes(clientes);
 
 
     }
 
-    public static void migrarClientes(Path archivosClientes, Path ClienteJson) throws IOException {
+    public static void migrarClientes(List<String> clientes) throws IOException {
 
-        List<String> lista = Files.readAllLines(archivosClientes);
+        String json = "{";
 
+        for (int i = 0; i < clientes.size(); i ++) {
 
+            String[] datos = clientes.get(i).split(" : ");
+                datos[0] = json + datos[0];
+                datos[datos.length] = json + datos[datos.length];
+
+        }
+
+    }
+
+    public static void migrarPagos(List<String> pagos){
+
+        String json = "{";
+
+        for(int i = 0; i < pagos.size(); i++) {
+            
+        }
 
 
     }
