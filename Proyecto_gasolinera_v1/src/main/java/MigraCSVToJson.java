@@ -34,34 +34,59 @@ public class MigraCSVToJson {
         List<String> clientes = Files.readAllLines(archivosClientes);
         List<String> pagos = Files.readAllLines(archivosPagos);
 
-        migrarClientes(clientes);
-
+        String json = migrarClientes(clientes);
+        String json2 = migrarPagos(pagos);
 
     }
 
-    public static void migrarClientes(List<String> clientes) throws IOException {
+    public static String migrarClientes(List<String> clientes) throws IOException {
 
-        String json = "{";
+        String json = "[\n";
 
         for (int i = 0; i < clientes.size(); i ++) {
 
-            String[] datos = clientes.get(i).split(" : ");
-                datos[0] = json + datos[0];
-                datos[datos.length] = json + datos[datos.length];
+            String[] datos = clientes.get(i).split(";");
+                json += "  {\n";
+                json += "    \"id\":" + datos[0] + ",\n";
+                json += "    \"nombre\":" + datos[1] + ",\n";
+                json += "    \"telefono\":" + datos[2] + ", \n";
+                json += "    \"matricula\":" + datos[3] + ", \n";
+                json += "}";
 
+            if(i < clientes.size() -1) {
+                json += " , ";
+            }
+            json += "\n";
         }
+
+        return json;
+
 
     }
 
-    public static void migrarPagos(List<String> pagos){
+    public static String migrarPagos(List<String> pagos){
 
-        String json = "{";
+        String json = "[\n";
 
         for(int i = 0; i < pagos.size(); i++) {
-            
+
+            String[] datos = pagos.get(i).split(";");
+                json += "  {\n";
+                json += "    \"id\":" + datos[0] + ",\n";
+                json += "    \"id_cli\":" + datos[1] + ",\n";
+                json += "    \"fecha\":" + datos[2] + ", \n";
+                json += "    \"importe\":" + datos[3] + ", \n";
+                json += "    \"litrod\":" + datos[5] + ",\n";
+                json += "    \"combustible\":" + datos[5] + ",\n";
+                json += "}";
+
+                if(i < pagos.size() - 1) {
+                    json = " , ";
+                }
+                json += "\n";
         }
 
-
+        return json;
     }
 
 

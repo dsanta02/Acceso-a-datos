@@ -45,6 +45,7 @@ public class Main {
             System.out.println("3. Buscar clientes");
             System.out.println("4. Procesar un pago de repostaje");
             System.out.println("5. Consultar pagos");
+            System.out.println("6. migrar datos de csv a json");
             System.out.println("0. Salir");
             System.out.println("Opción:");
 
@@ -75,6 +76,10 @@ public class Main {
             } else if (opcion != 0) {
 
                 System.out.println("Opción no válida.");
+
+            } else if (opcion == 6) {
+
+                
 
             }
 
