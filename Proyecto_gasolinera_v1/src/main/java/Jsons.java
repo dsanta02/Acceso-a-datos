@@ -159,7 +159,7 @@ public class Jsons implements ProcesosLeerEscribir {
 
                 int identificador = Integer.parseInt(datos[0].split(":")[1]);
                 int identificadorCliente = Integer.parseInt(datos[1].split(":")[1]);
-                String fecha = datos[2].split(":")[1];
+                LocalDate fecha = LocalDate.parse(datos[2].split(":", 2)[1]);
                 double importe = Double.parseDouble(datos[3].split(":")[1]);
                 double litros = Double.parseDouble(datos[4].split(":")[1]);
                 String combustible = datos[5].split(":")[1];

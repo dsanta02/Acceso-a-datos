@@ -34,10 +34,10 @@ public class MigraCSVToJson {
             List<Clientes> clientes = new ArrayList<>();
             List<Pagos> pagos = new ArrayList<>();
 
-            // Leer todas las líneas del archivo CSV de clientes
+
             List<String> lineasClientes = Files.readAllLines(csvClientes);
 
-// Recorrer las líneas de clientes
+            // Recorrer las líneas de clientes
             for (int i = 0; i < lineasClientes.size(); i++) {
 
                 // Separar los datos usando el punto y coma

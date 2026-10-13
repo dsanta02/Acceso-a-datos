@@ -84,7 +84,6 @@ public class aplicacionConsola {
                 System.out.println("Ruta del CSV de pagos:");
                 String rutaPagos = sc.nextLine();
 
-                // Realizar la migración
                 MigraCSVToJson migracion = new MigraCSVToJson();
 
                 migracion.migrar(rutaClientes, rutaPagos);
