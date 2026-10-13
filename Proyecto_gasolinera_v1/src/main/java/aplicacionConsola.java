@@ -77,7 +77,17 @@ public class aplicacionConsola {
 
             } else if (opcion == 6) {
 
-                // Aquí iría la migración de CSV a JSON
+                System.out.println("Ruta del CSV de clientes:");
+                sc.nextLine();
+                String rutaClientes = sc.nextLine();
+
+                System.out.println("Ruta del CSV de pagos:");
+                String rutaPagos = sc.nextLine();
+
+                // Realizar la migración
+                MigraCSVToJson migracion = new MigraCSVToJson();
+
+                migracion.migrar(rutaClientes, rutaPagos);
 
             } else if (opcion != 0) {
 
