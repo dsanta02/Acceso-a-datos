@@ -1,3 +1,7 @@
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 
@@ -13,25 +17,59 @@ public class aplicacionConsola {
 
     public void ejecutar() {
 
-        if (!c.crearArchivo()) {
+        Path jsonClientes = Paths.get("src/clientesJson.json");
+        Path jsonPagos = Paths.get("src/PagosJson.json");
 
-            System.out.println(
-                    "No se ha podido preparar el almacenamiento."
-            );
+        // Comprobar si ya existe el almacenamiento JSON
+        if (!Files.exists(jsonClientes) && !Files.exists(jsonPagos)) {
 
-            return;
+            System.out.println("¿Quieres migrar los datos CSV a JSON? (si/no)");
+            String respuesta = sc.nextLine();
+
+            if (respuesta.equalsIgnoreCase("si")) {
+
+                System.out.println("Ruta del CSV de clientes:");
+                String rutaClientes = sc.nextLine();
+
+                System.out.println("Ruta del CSV de pagos:");
+                String rutaPagos = sc.nextLine();
+
+                MigraCSVToJson migracion = new MigraCSVToJson();
+
+                if (!migracion.migrar(rutaClientes, rutaPagos)) {
+                    System.out.println("No se ha podido completar la migración.");
+                    return;
+                }
+
+            } else if (respuesta.equalsIgnoreCase("n")) {
+
+                if (!c.crearArchivo()) {
+                    System.out.println("No se ha podido preparar el almacenamiento.");
+                    return;
+                }
+
+            } else {
+                System.out.println("Respuesta no válida. Escribe s o n.");
+                return;
+            }
+
+        } else {
+
+
+            if (!c.crearArchivo()) {
+                System.out.println("No se ha podido preparar el almacenamiento.");
+                return;
+            }
         }
 
         List<Clientes> clientes = c.leerClientes();
         List<Pagos> pagos = c.leerPagos();
 
         if (clientes == null || pagos == null) {
-
             System.out.println(
                     "No se puede continuar porque existe un problema "
                             + "con los datos almacenados."
             );
-
             return;
         }
 
@@ -47,7 +85,6 @@ public class aplicacionConsola {
             System.out.println("3. Buscar clientes");
             System.out.println("4. Procesar un pago de repostaje");
             System.out.println("5. Consultar pagos");
-            System.out.println("6. Migrar datos de CSV a JSON");
             System.out.println("0. Salir");
             System.out.println("Opción:");
 
@@ -75,19 +112,6 @@ public class aplicacionConsola {
                 GestionPagos p = new GestionPagos(sc, g);
                 p.consultarPagos(pagos, clientes);
 
-            } else if (opcion == 6) {
-
-                System.out.println("Ruta del CSV de clientes:");
-                sc.nextLine();
-                String rutaClientes = sc.nextLine();
-
-                System.out.println("Ruta del CSV de pagos:");
-                String rutaPagos = sc.nextLine();
-
-                MigraCSVToJson migracion = new MigraCSVToJson();
-
-                migracion.migrar(rutaClientes, rutaPagos);
-
             } else if (opcion != 0) {
 
                 System.out.println("Opción no válida.");
@@ -97,6 +121,5 @@ public class aplicacionConsola {
 
         System.out.println("Hasta pronto.");
     }
-
-
 }
+

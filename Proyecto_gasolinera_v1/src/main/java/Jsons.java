@@ -1,207 +1,174 @@
 
-
-
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
 
 public class Jsons implements ProcesosLeerEscribir {
 
-    Path archivoClientes;
-    Path archivoPagos;
-    Path clienteJson;
-    Path pagosJson;
+    private final Path archivoClientes = Paths.get("src/clientesJson.json");
+    private final Path archivoPagos = Paths.get("src/PagosJson.json");
 
-    public Jsons() {
-        this.archivoClientes = Paths.get("src/clientes.csv");
-        this.archivoPagos = Paths.get("src/pagos.csv");
-        this.clienteJson = Paths.get("src/clientesJson.json");
-        this.pagosJson = Paths.get("src/PagosJson.json");
+    private final DateTimeFormatter formato =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    @Override
+    public boolean crearArchivo() {
+        try {
+            if (!Files.exists(archivoClientes)) {
+                Files.writeString(archivoClientes, "[]");
+            }
+
+            if (!Files.exists(archivoPagos)) {
+                Files.writeString(archivoPagos, "[]");
+            }
+
+            return true;
+
+        } catch (IOException e) {
+            System.out.println("Error al crear los archivos JSON: " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
     public boolean guardarClientes(List<Clientes> clientes) {
-        try {
-            String json = clientes.stream() //cada cliente en texto
-                    .map(c -> "{\"id\":" + c.getId()
-                            + ",\"nombre\":\"" + c.getNombre()
-                            + "\",\"tel\":\"" + c.getTel()
-                            + "\",\"matricula\":\"" + c.getMatricula()
-                            + "\"}")
-                    .reduce("[",//junta los textos en 1 solo
-                            (resultado, cliente) -> resultado + cliente + ",");
+        String json = "[";
 
-            if (!clientes.isEmpty()) {
-                json = json.substring(0, json.length() - 1); //fuera ultima coma
+        for (int i = 0; i < clientes.size(); i++) {
+            Clientes c = clientes.get(i);
+
+            json += "{\"id\":" + c.getId()
+                    + ",\"nombre\":\"" + c.getNombre()
+                    + "\",\"tel\":\"" + c.getTel()
+                    + "\",\"matricula\":\"" + c.getMatricula() + "\"}";
+
+            if (i < clientes.size() - 1) {
+                json += ",";
             }
+        }
 
-            json += "]"; //cerramos el json con el ] al final
+        json += "]";
 
-            Files.writeString(clienteJson, json);
+        try {
+            Files.writeString(archivoClientes, json);
             return true;
 
         } catch (IOException e) {
-            System.out.println("Error al guardar los clientes: "
-                    + e.getMessage());
+            System.out.println("Error al guardar clientes: " + e.getMessage());
             return false;
         }
     }
+
     @Override
     public boolean guardarPago(List<Pagos> pagos) {
-        try {
-            String json = pagos.stream()
-                    .map(p -> "{\"identificador\":" + p.getIdentificador()
-                            + ",\"identificadorCliente\":" + p.getIdentificadorCliente()
-                            + ",\"fecha\":\"" + p.getFecha()
-                            + "\",\"importe\":" + p.getImporte()
-                            + ",\"litros\":" + p.getLitros()
-                            + ",\"combustible\":\"" + p.getCombustible()
-                            + "\"}")
-                    .reduce("[",
-                            (resultado, pago) -> resultado + pago + ",");
+        String json = "[";
 
-            if (!pagos.isEmpty()) {
-                json = json.substring(0, json.length() - 1);
+        for (int i = 0; i < pagos.size(); i++) {
+            Pagos p = pagos.get(i);
+
+            json += "{\"identificador\":" + p.getIdentificador()
+                    + ",\"identificadorCliente\":" + p.getIdentificadorCliente()
+                    + ",\"fecha\":\"" + p.getFecha().format(formato)
+                    + "\",\"importe\":" + p.getImporte()
+                    + ",\"litros\":" + p.getLitros()
+                    + ",\"combustible\":\"" + p.getCombustible() + "\"}";
+
+            if (i < pagos.size() - 1) {
+                json += ",";
             }
+        }
 
-            json += "]";
+        json += "]";
 
-            Files.writeString(pagosJson, json);
+        try {
+            Files.writeString(archivoPagos, json);
             return true;
 
         } catch (IOException e) {
-            System.out.println("Error al guardar los pagos: "
-                    + e.getMessage());
+            System.out.println("Error al guardar pagos: " + e.getMessage());
             return false;
         }
     }
-
 
     @Override
     public List<Clientes> leerClientes() {
-
         List<Clientes> clientes = new ArrayList<>();
 
         try {
-            String json = Files.readString(clienteJson);
+            String json = Files.readString(archivoClientes).trim();
 
-            // comprobamos si el archivo esdta vacio
-            if (json.isBlank() || json.equals("[]")) {
+            if (json.isEmpty() || json.equals("[]")) {
                 return clientes;
             }
 
-            // Separar los objetos de clientes del JSON
-            String[] objetos = json.substring(1, json.length() - 1)
-                    .split("\\},\\{");
+            json = json.substring(1, json.length() - 1);
+            String[] registros = json.split("\\},\\{");
 
-            // Recorrer cada objeto de cliente
-            for (String objeto : objetos) {
+            for (String registro : registros) {
+                registro = registro.replace("{", "").replace("}", "");
+                String[] campos = registro.split(",");
 
-                // Quitar las [ y las comilla
-                objeto = objeto.replace("{", "")
-                        .replace("}", "")
-                        .replace("\"", "");
+                int id = Integer.parseInt(campos[0].split(":", 2)[1]);
+                String nombre = campos[1].split(":", 2)[1].replace("\"", "");
+                String tel = campos[2].split(":", 2)[1].replace("\"", "");
+                String matricula = campos[3].split(":", 2)[1].replace("\"", "");
 
-                // Separar los campos del cliente
-                String[] datos = objeto.split(",");
-
-                // Obtener los datos y convertir el ID a número
-                int id = Integer.parseInt(datos[0].split(":")[1]);
-                String nombre = datos[1].split(":")[1];
-                String tel = datos[2].split(":")[1];
-                String matricula = datos[3].split(":")[1];
-
-                // Crear el objeto cliente con sus datos
-                Clientes cliente = new Clientes(id, nombre, tel, matricula);
-
-                // Añadir el cliente a la lista
-                clientes.add(cliente);
+                clientes.add(new Clientes(id, nombre, tel, matricula));
             }
 
         } catch (IOException e) {
-            // Mostrar un mensaje si ocurre un error al leer el archivo
-            System.out.println("Error al leer los clientes: " + e.getMessage());
+            System.out.println("Error al leer clientes: " + e.getMessage());
         }
 
-        // Devolver la lista de clientes
         return clientes;
     }
-
-
 
     @Override
     public List<Pagos> leerPagos() {
         List<Pagos> pagos = new ArrayList<>();
 
         try {
-            String json = Files.readString(pagosJson);
+            String json = Files.readString(archivoPagos).trim();
 
-            if (json.isBlank() || json.equals("[]")) {
+            if (json.isEmpty() || json.equals("[]")) {
                 return pagos;
             }
 
-            String[] objetos = json.substring(1, json.length() - 1)
-                    .split("\\},\\{");
+            json = json.substring(1, json.length() - 1);
+            String[] registros = json.split("\\},\\{");
 
-            for (String objeto : objetos) {
-                objeto = objeto.replace("{", "")
-                        .replace("}", "")
-                        .replace("\"", "");
+            for (String registro : registros) {
+                registro = registro.replace("{", "").replace("}", "");
+                String[] campos = registro.split(",");
 
-                String[] datos = objeto.split(",");
+                int id = Integer.parseInt(campos[0].split(":", 2)[1]);
+                int idCliente = Integer.parseInt(campos[1].split(":", 2)[1]);
+                String fechaTexto = campos[2].split(":", 2)[1].replace("\"", "");
+                double importe = Double.parseDouble(campos[3].split(":", 2)[1]);
+                double litros = Double.parseDouble(campos[4].split(":", 2)[1]);
+                String combustible = campos[5].split(":", 2)[1].replace("\"", "");
 
-                int identificador = Integer.parseInt(datos[0].split(":")[1]);
-                int identificadorCliente = Integer.parseInt(datos[1].split(":")[1]);
-                LocalDate fecha = LocalDate.parse(datos[2].split(":", 2)[1]);
-                double importe = Double.parseDouble(datos[3].split(":")[1]);
-                double litros = Double.parseDouble(datos[4].split(":")[1]);
-                String combustible = datos[5].split(":")[1];
+                LocalDate fecha = LocalDate.parse(fechaTexto, formato);
 
-                Pagos pago = new Pagos(
-                        identificador,
-                        identificadorCliente,
-                        fecha,
-                        importe,
-                        litros,
-                        combustible
-                );
-
-                pagos.add(pago);
+                pagos.add(new Pagos(
+                        id, idCliente, fecha, importe, litros, combustible
+                ));
             }
 
         } catch (IOException e) {
-            System.out.println("Error al leer los pagos: " + e.getMessage());
+            System.out.println("Error al leer pagos: " + e.getMessage());
         }
 
         return pagos;
     }
-
-
-    @Override
-    public boolean crearArchivo() {
-        try {
-            if (!Files.exists(clienteJson)) {
-                Files.writeString(clienteJson, "[]");
-            }
-
-            if (!Files.exists(pagosJson)) {
-                Files.writeString(pagosJson, "[]");
-            }
-
-            return true;
-
-        } catch (IOException e) {
-            System.out.println("Error al crear los archivos: "
-                    + e.getMessage());
-            return false;
-        }
-    }
 }
+
+
+
 
 
