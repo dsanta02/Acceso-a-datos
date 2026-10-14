@@ -63,7 +63,7 @@ public class GestionClientes {
         }
 
 
-        if (opcion == true) {
+        if (opcion) {
             System.out.println("La matrícula ya está registrada.");
             return;
         }
