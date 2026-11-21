@@ -1,104 +1,138 @@
-
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MigraCSVToJson {
 
-    private final Path clienteJson = Paths.get("src/clientesJson.json");
-    private final Path pagosJson = Paths.get("src/PagosJson.json");
+    private static final DateTimeFormatter SUFIJO_BACKUP =
+            DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS");
+
+    private final Path csvClientes;
+    private final Path csvPagos;
+    private final Jsons destino;
+
+    public MigraCSVToJson() {
+        this(Paths.get("src/src/clientes.csv"), Paths.get("src/src/pagos.csv"),
+                new Jsons());
+    }
+
+    public MigraCSVToJson(Path csvClientes, Path csvPagos, Jsons destino) {
+        this.csvClientes = csvClientes;
+        this.csvPagos = csvPagos;
+        this.destino = destino;
+    }
+
+    public boolean migrar() {
+        return migrar(csvClientes.toString(), csvPagos.toString());
+    }
 
     public boolean migrar(String rutaClientes, String rutaPagos) {
-
-        Path archivoClientes = Paths.get(rutaClientes);
-        Path archivoPagos = Paths.get(rutaPagos);
-
-
-        if (!Files.exists(archivoClientes) || !Files.exists(archivoPagos)) {
+        Path origenClientes = Paths.get(rutaClientes);
+        Path origenPagos = Paths.get(rutaPagos);
+        if (!Files.isRegularFile(origenClientes) || !Files.isRegularFile(origenPagos)) {
             System.out.println("Error: no se encuentran los archivos CSV.");
             return false;
         }
 
-
-        if (Files.exists(clienteJson) || Files.exists(pagosJson)) {
-            System.out.println("Error: ya existe algún archivo JSON de destino.");
-            return false;
-        }
-
-        List<Clientes> clientes = new ArrayList<>();
-        List<Pagos> pagos = new ArrayList<>();
-
-        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
         try {
+            Ficheros csv = new Ficheros(origenClientes, origenPagos);
+            List<Clientes> clientes = csv.buscarClientes();
+            List<Pagos> pagos = csv.buscarPagos();
+            validarDatos(clientes, pagos);
 
-            List<String> lineasClientes = Files.readAllLines(archivoClientes);
-
-            for (int i = 0; i < lineasClientes.size(); i++) {
-                String[] datos = lineasClientes.get(i).split(";", -1);
-
-                if (datos.length != 4) {
-                    System.out.println("Error en clientes, línea " + (i + 1)
-                            + ": deben existir 4 campos.");
-                    return false;
-                }
-
-                int id = Integer.parseInt(datos[0].trim());
-                String nombre = datos[1].trim();
-                String tel = datos[2].trim();
-                String matricula = datos[3].trim();
-
-                clientes.add(new Clientes(id, nombre, tel, matricula));
+            Path backup = crearCopiasDeSeguridad();
+            try {
+                destino.guardarClientes(clientes);
+                destino.guardarPago(pagos);
+            } catch (RuntimeException e) {
+                restaurarDesdeBackup(backup);
+                throw e;
             }
-
-
-            List<String> lineasPagos = Files.readAllLines(archivoPagos);
-
-            for (int i = 0; i < lineasPagos.size(); i++) {
-                String[] datos = lineasPagos.get(i).split(";", -1);
-
-                if (datos.length != 6) {
-                    System.out.println("Error en pagos, línea " + (i + 1)
-                            + ": deben existir 6 campos.");
-                    return false;
-                }
-
-                int id = Integer.parseInt(datos[0].trim());
-                int idCliente = Integer.parseInt(datos[1].trim());
-                LocalDate fecha = LocalDate.parse(datos[2].trim(), formato);
-                double importe = Double.parseDouble(datos[3].trim().replace(",", "."));
-                double litros = Double.parseDouble(datos[4].trim().replace(",", "."));
-                String combustible = datos[5].trim();
-
-                pagos.add(new Pagos(
-                        id, idCliente, fecha, importe, litros, combustible
-                ));
-            }
-
-
-            Jsons jsons = new Jsons();
-
-            jsons.guardarClientes(clientes);
-            jsons.guardarPago(pagos);
 
             System.out.println("Clientes migrados: " + clientes.size());
             System.out.println("Pagos migrados: " + pagos.size());
-            System.out.println("Destino: " + clienteJson + " y " + pagosJson);
-
+            System.out.println("Destino: " + destino.getArchivoClientes()
+                    + " y " + destino.getArchivoPagos());
+            if (backup != null) {
+                System.out.println("Copia de seguridad anterior: " + backup);
+            }
             return true;
-
-        } catch (IOException | NumberFormatException
-                 | java.time.DateTimeException e) {
-
+        } catch (RuntimeException | IOException e) {
             System.out.println("Error en la migración: " + e.getMessage());
             return false;
         }
     }
-}
 
+    private void validarDatos(List<Clientes> clientes, List<Pagos> pagos) {
+        Set<Integer> idsClientes = new HashSet<>();
+        for (Clientes cliente : clientes) {
+            if (cliente.getId() <= 0 || cliente.getNombre().isBlank()
+                    || cliente.getTel().isBlank() || cliente.getMatricula().isBlank()
+                    || !idsClientes.add(cliente.getId())) {
+                throw new ErrorPersistencia("Los datos CSV contienen un cliente inválido o duplicado.");
+            }
+        }
+
+        Set<Integer> idsPagos = new HashSet<>();
+        for (Pagos pago : pagos) {
+            if (pago.getIdentificador() <= 0 || pago.getIdentificadorCliente() <= 0
+                    || pago.getImporte() <= 0 || pago.getLitros() <= 0
+                    || !idsClientes.contains(pago.getIdentificadorCliente())
+                    || !idsPagos.add(pago.getIdentificador())) {
+                throw new ErrorPersistencia("Los datos CSV contienen un pago inválido o duplicado.");
+            }
+        }
+    }
+
+    private Path crearCopiasDeSeguridad() throws IOException {
+        boolean existeClientes = Files.exists(destino.getArchivoClientes());
+        boolean existePagos = Files.exists(destino.getArchivoPagos());
+        if (!existeClientes && !existePagos) {
+            return null;
+        }
+
+        Path directorioBase = destino.getArchivoClientes().toAbsolutePath().getParent();
+        Path backup = directorioBase.resolve(
+                "backup-json-" + LocalDateTime.now().format(SUFIJO_BACKUP)
+        );
+        Files.createDirectories(backup);
+        if (existeClientes) {
+            Files.copy(destino.getArchivoClientes(), backup.resolve("clientesJson.json"),
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
+        if (existePagos) {
+            Files.copy(destino.getArchivoPagos(), backup.resolve("PagosJson.json"),
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
+        return backup;
+    }
+
+    private void restaurarDesdeBackup(Path backup) throws IOException {
+        if (backup == null) {
+            Files.deleteIfExists(destino.getArchivoClientes());
+            Files.deleteIfExists(destino.getArchivoPagos());
+            return;
+        }
+        Path copiaClientes = backup.resolve("clientesJson.json");
+        Path copiaPagos = backup.resolve("PagosJson.json");
+        if (Files.exists(copiaClientes)) {
+            Files.copy(copiaClientes, destino.getArchivoClientes(),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            Files.deleteIfExists(destino.getArchivoClientes());
+        }
+        if (Files.exists(copiaPagos)) {
+            Files.copy(copiaPagos, destino.getArchivoPagos(),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            Files.deleteIfExists(destino.getArchivoPagos());
+        }
+    }
+}

@@ -1,24 +1,29 @@
-
-
 # Gestión de Gasolinera
 
-## Descripción
-Aplicación hecha en Java para gestionar clientes y pagos de repostaje de una gasolinera.
+Aplicación de consola en Java 21 para registrar clientes y pagos de repostaje.
 
-## Funciones
+## Funcionalidades
+
 - Dar de alta, listar y buscar clientes.
 - Registrar y consultar pagos.
-- Migrar los datos de CSV a JSON.
+- Elegir CSV o JSON al iniciar.
+- Migrar los datos CSV a JSON.
 
-## Archivos
-- `clientes.csv` y `pagos.csv`: datos originales.
-- `clientesJson.json` y `PagosJson.json`: datos en formato JSON.
+## Almacenamiento
 
-## Migración
-Al iniciar el programa, si no existen los archivos JSON, pregunta si se quieren migrar los datos CSV. Si ya existen, no vuelve a preguntar.
+Al ejecutar desde la raíz del proyecto, los datos se guardan en:
 
-## Tecnologías
-Java 21, IntelliJ IDEA, CSV, JSON, Git y GitHub.
+- `src/src/clientes.csv` y `src/src/pagos.csv`
+- `src/src/clientesJson.json` y `src/src/PagosJson.json`
+
+La aplicación pregunta antes de sustituir un JSON que no pueda leer. Si se confirma la recuperación desde CSV, conserva los JSON anteriores en una carpeta `backup-json-*` junto a los archivos.
+
+Las clases de gestión usan `ClienteRepository` y `PagoRepository`; `Ficheros` y `Jsons` son implementaciones intercambiables. Esto permite añadir posteriormente una implementación JDBC sin acoplar la gestión a los archivos.
 
 ## Ejecución
-Abrir el proyecto en IntelliJ IDEA y ejecutar la clase `Main`.
+
+Desde IntelliJ IDEA, ejecutar `Main` con el directorio de trabajo configurado en la raíz del proyecto. También puede compilarse y probarse con Maven:
+
+```text
+mvn test
+```

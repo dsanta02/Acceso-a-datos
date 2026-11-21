@@ -1,196 +1,97 @@
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Scanner;
 
 public class GestionClientes {
 
-    Scanner sc;
-    Ficheros gestionFicheros;
+    private final Scanner sc;
+    private final ClienteRepository clientes;
 
-    public GestionClientes(Scanner sc, Ficheros gestionFicheros) {
+    public GestionClientes(Scanner sc, ClienteRepository clientes) {
         this.sc = sc;
-        this.gestionFicheros = gestionFicheros;
+        this.clientes = clientes;
     }
 
-    public void darAlta(List<Clientes> clientes) {
+    public void darAlta() {
+        String nombre = leerTextoObligatorio("Introduzca su nombre:");
+        String tel = leerTextoObligatorio("Introduzca su número de teléfono:");
+        String matricula = leerTextoObligatorio("Introduzca la matrícula:")
+                .toUpperCase(Locale.ROOT);
 
-        String nombre;
-        String tel;
-        String matricula;
-
-        do {
-            System.out.println("Introduzca su nombre:");
-            nombre = sc.nextLine().trim();
-
-            if (nombre.isEmpty()) {
-                System.out.println("El nombre no puede estar vacío.");
-            }
-
-        } while (nombre.isEmpty());
-
-
-        do {
-            System.out.println("Introduzca su número de teléfono:");
-            tel = sc.nextLine().trim();
-
-            if (tel.isEmpty()) {
-                System.out.println("El teléfono no puede estar vacío.");
-            }
-
-        } while (tel.isEmpty());
-
-
-        do {
-            System.out.println("Introduzca la matrícula:");
-            matricula = sc.nextLine().trim().toUpperCase();
-
-            if (matricula.isEmpty()) {
-                System.out.println("La matrícula no puede estar vacía.");
-            }
-
-        } while (matricula.isEmpty());
-
-
-        boolean opcion = false;
-
-        for (int i = 0; i < clientes.size(); i++) {
-
-            if (matricula.equalsIgnoreCase(clientes.get(i).getMatricula())) {
-                opcion = true;
-                break;
-            }
-        }
-
-
-        if (opcion) {
+        if (clientes.existeMatricula(matricula)) {
             System.out.println("La matrícula ya está registrada.");
             return;
         }
 
-        int id = 1;
+        int id = clientes.buscarClientes().stream()
+                .mapToInt(Clientes::getId)
+                .max()
+                .orElse(0) + 1;
+        clientes.guardar(new Clientes(id, nombre, tel, matricula));
+        System.out.println("El cliente se ha registrado correctamente con el ID " + id);
+    }
 
-        for (int i = 0; i < clientes.size(); i ++) {
-
-            if(id <= clientes.get(i).getId()) {
-                id = clientes.get(i).getId() + 1;
-
-            }
-
+    public void listarCliente() {
+        List<Clientes> lista = ordenar(clientes.buscarClientes());
+        if (lista.isEmpty()) {
+            System.out.println("No hay clientes en la lista.");
+            return;
         }
-
-        Clientes c = new Clientes(id, nombre, tel, matricula);
-
-        clientes.add(c);
-
-        boolean guardado = gestionFicheros.guardarClientes(clientes);
-
-        if (guardado) {
-
-            System.out.println(
-                    "El cliente se ha registrado correctamente con el ID " + id
-            );
-
-        } else {
-
-            clientes.remove(c);
-
-            System.out.println(
-                    "No se ha podido guardar el cliente. "
-                            + "El cliente no ha sido registrado."
-            );
+        for (Clientes cliente : lista) {
+            mostrar(cliente);
         }
     }
 
-    public void listarCliente(List<Clientes> cliente) {
-
-        if(cliente.isEmpty()) {
-
-            System.out.println("no hay clientes en la lista");
-
+    public void buscarCliente() {
+        System.out.println("Introduce un texto para buscar:");
+        String texto = sc.nextLine().trim().toLowerCase(Locale.ROOT);
+        while (texto.isEmpty()) {
+            System.out.println("El texto no puede estar vacío.");
+            System.out.println("Introduce un texto para buscar:");
+            texto = sc.nextLine().trim().toLowerCase(Locale.ROOT);
         }
 
-        cliente.sort(new Comparator<Clientes>() {
-            @Override
-            public int compare(Clientes o1, Clientes o2) {
-                int resultado = o1.getNombre().compareToIgnoreCase(o2.getNombre());
-
-                if(resultado == 0) {
-
-                    return Integer.compare(o1.getId(), o2.getId());
-
-                }
-                return resultado;
-            }
-        });
-
-        for(int i = 0; i < cliente.size(); i ++) {
-
-            System.out.println("id: " + cliente.get(i).getId());
-            System.out.println("nombre: " + cliente.get(i).getNombre());
-            System.out.println("telefono: " + cliente.get(i).getTel());
-            System.out.println("matricula: " + cliente.get(i).getMatricula());
-
-        }
-
-    }
-
-    public void buscarCliente(List<Clientes> cliente) {
-
-        System.out.println("introduce un texto para buscar: ");
-        String txt = sc.nextLine();
-
-        while(txt.isEmpty()) {
-            System.out.println("el texto no puede estar vacio");
-            System.out.println("introduce un texto para buscar: ");
-            txt = sc.nextLine().trim();
-        }
-
-        cliente.sort(new Comparator<Clientes>() {
-            @Override
-            public int compare(Clientes o1, Clientes o2) {
-                int resultado = o1.getNombre().compareToIgnoreCase(o2.getNombre());
-
-                if (resultado == 0) {
-                    return Integer.compare(o1.getId(), o2.getId());
-                }
-
-                return resultado;
-            }
-        });
-
+        List<Clientes> lista = ordenar(clientes.buscarClientes());
         boolean encontrado = false;
-
-        for(int i = 0; i < cliente.size(); i ++) {
-
-            if(cliente.get(i).getNombre().toLowerCase().contains(txt) ||
-                    cliente.get(i).getMatricula().toLowerCase().contains(txt) ||
-                    cliente.get(i).getTel().contains(txt)){
-
+        for (Clientes cliente : lista) {
+            if (cliente.getNombre().toLowerCase(Locale.ROOT).contains(texto)
+                    || cliente.getMatricula().toLowerCase(Locale.ROOT).contains(texto)
+                    || cliente.getTel().contains(texto)) {
+                mostrar(cliente);
                 encontrado = true;
-
-                System.out.println("Identificador: " + cliente.get(i).getId());
-                System.out.println("Nombre: " + cliente.get(i).getNombre());
-                System.out.println("Teléfono: " + cliente.get(i).getTel());
-                System.out.println("Matrícula: " + cliente.get(i).getMatricula());
-                System.out.println("----------------------");
-
             }
-
         }
-
-        if(!encontrado) {
-
-            System.out.println("no se ha encontrado cliente.");
-
+        if (!encontrado) {
+            System.out.println("No se ha encontrado cliente.");
         }
-
     }
 
-    public boolean existe() {
-
-
-        return false;
+    private String leerTextoObligatorio(String mensaje) {
+        System.out.println(mensaje);
+        String texto = sc.nextLine().trim();
+        while (texto.isEmpty()) {
+            System.out.println("El valor no puede estar vacío.");
+            System.out.println(mensaje);
+            texto = sc.nextLine().trim();
+        }
+        return texto;
     }
 
+    private List<Clientes> ordenar(List<Clientes> lista) {
+        List<Clientes> ordenada = new ArrayList<>(lista);
+        ordenada.sort(Comparator.comparing(Clientes::getNombre,
+                        String.CASE_INSENSITIVE_ORDER)
+                .thenComparingInt(Clientes::getId));
+        return ordenada;
+    }
+
+    private void mostrar(Clientes cliente) {
+        System.out.println("Identificador: " + cliente.getId());
+        System.out.println("Nombre: " + cliente.getNombre());
+        System.out.println("Teléfono: " + cliente.getTel());
+        System.out.println("Matrícula: " + cliente.getMatricula());
+        System.out.println("----------------------");
+    }
 }
