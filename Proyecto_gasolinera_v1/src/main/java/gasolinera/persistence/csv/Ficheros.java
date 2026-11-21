@@ -1,3 +1,11 @@
+package gasolinera.persistence.csv;
+
+import gasolinera.model.Clientes;
+import gasolinera.model.Pagos;
+import gasolinera.persistence.ErrorPersistencia;
+import gasolinera.repository.ClienteRepository;
+import gasolinera.repository.PagoRepository;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -9,10 +17,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
 
-public class Ficheros implements ProcesosLeerEscribir, ClienteRepository, PagoRepository {
+public class Ficheros implements ClienteRepository, PagoRepository {
 
     private static final DateTimeFormatter FORMATO_FECHA =
             DateTimeFormatter.ofPattern("dd/MM/uuuu")
@@ -58,16 +69,51 @@ public class Ficheros implements ProcesosLeerEscribir, ClienteRepository, PagoRe
 
     @Override
     public boolean existeMatricula(String matricula) {
+        if (matricula == null || matricula.isBlank()) {
+            return false;
+        }
         String normalizada = matricula.trim();
         return buscarClientes().stream()
                 .anyMatch(cliente -> cliente.getMatricula().equalsIgnoreCase(normalizada));
     }
 
     @Override
-    public void guardar(Clientes cliente) {
+    public Optional<Clientes> buscarPorId(int id) {
+        return buscarClientes().stream().filter(cliente -> cliente.getId() == id).findFirst();
+    }
+
+    @Override
+    public Clientes guardar(Clientes cliente) {
+        if (cliente == null) {
+            throw new IllegalArgumentException("El cliente no puede ser nulo.");
+        }
+        cliente.validarNuevo();
+        if (existeMatricula(cliente.getMatricula())) {
+            throw new IllegalArgumentException("La matrícula ya está registrada.");
+        }
         List<Clientes> clientes = buscarClientes();
-        clientes.add(cliente);
-        guardarClientes(clientes);
+        int id = siguienteId(clientes.stream().mapToInt(Clientes::getId).max().orElse(0));
+        Clientes guardado = new Clientes(id, cliente.getNombre(), cliente.getTel(),
+                cliente.getMatricula());
+        clientes.add(guardado);
+        reemplazarClientes(clientes);
+        return guardado;
+    }
+
+    @Override
+    public void reemplazarClientes(List<Clientes> clientes) {
+        List<String> lineas = new ArrayList<>();
+        for (Clientes cliente : clientes) {
+            if (cliente == null) {
+                throw new ErrorPersistencia("No se puede guardar un cliente nulo.");
+            }
+            cliente.validar();
+            lineas.add(cliente.getId() + ";"
+                    + escapar(cliente.getNombre()) + ";"
+                    + escapar(cliente.getTel()) + ";"
+                    + escapar(cliente.getMatricula()));
+        }
+        escribir(archivosClientes, lineas, "clientes");
     }
 
     @Override
@@ -95,41 +141,40 @@ public class Ficheros implements ProcesosLeerEscribir, ClienteRepository, PagoRe
                 );
             }
         }
+        validarRelaciones(pagos);
         return pagos;
     }
 
     @Override
-    public void guardar(Pagos pago) {
-        List<Pagos> pagos = buscarPagos();
-        pagos.add(pago);
-        guardarPago(pagos);
-    }
-
-    @Override
-    public boolean guardarClientes(List<Clientes> clientes) {
-        List<String> lineas = new ArrayList<>();
-        for (Clientes cliente : clientes) {
-            if (cliente == null) {
-                throw new ErrorPersistencia("No se puede guardar un cliente nulo.");
-            }
-            cliente.validar();
-            lineas.add(cliente.getId() + ";"
-                    + escapar(cliente.getNombre()) + ";"
-                    + escapar(cliente.getTel()) + ";"
-                    + escapar(cliente.getMatricula()));
+    public Pagos guardar(Pagos pago) {
+        if (pago == null) {
+            throw new IllegalArgumentException("El pago no puede ser nulo.");
         }
-        escribir(archivosClientes, lineas, "clientes");
-        return true;
+        pago.validarNuevo();
+        if (buscarPorId(pago.getIdentificadorCliente()).isEmpty()) {
+            throw new IllegalArgumentException("El cliente del pago no existe.");
+        }
+        List<Pagos> pagos = buscarPagos();
+        int id = siguienteId(pagos.stream().mapToInt(Pagos::getIdentificador).max().orElse(0));
+        Pagos guardado = new Pagos(id, pago.getIdentificadorCliente(), pago.getFecha(),
+                pago.getImporte(), pago.getLitros(), pago.getCombustible());
+        pagos.add(guardado);
+        reemplazarPagos(pagos);
+        return guardado;
     }
 
     @Override
-    public boolean guardarPago(List<Pagos> pagos) {
+    public void reemplazarPagos(List<Pagos> pagos) {
         List<String> lineas = new ArrayList<>();
+        Set<Integer> idsClientes = idsClientes();
         for (Pagos pago : pagos) {
             if (pago == null) {
                 throw new ErrorPersistencia("No se puede guardar un pago nulo.");
             }
             pago.validar();
+            if (!idsClientes.contains(pago.getIdentificadorCliente())) {
+                throw new ErrorPersistencia("El pago referencia a un cliente inexistente.");
+            }
             lineas.add(pago.getIdentificador() + ";"
                     + pago.getIdentificadorCliente() + ";"
                     + pago.getFecha().format(FORMATO_FECHA) + ";"
@@ -138,20 +183,8 @@ public class Ficheros implements ProcesosLeerEscribir, ClienteRepository, PagoRe
                     + escapar(pago.getCombustible()));
         }
         escribir(archivosPagos, lineas, "pagos");
-        return true;
     }
 
-    @Override
-    public List<Clientes> leerClientes() {
-        return buscarClientes();
-    }
-
-    @Override
-    public List<Pagos> leerPagos() {
-        return buscarPagos();
-    }
-
-    @Override
     public boolean crearArchivo() {
         try {
             crearSiNoExiste(archivosClientes);
@@ -212,6 +245,31 @@ public class Ficheros implements ProcesosLeerEscribir, ClienteRepository, PagoRe
         Path padre = archivo.toAbsolutePath().getParent();
         if (padre != null) {
             Files.createDirectories(padre);
+        }
+    }
+
+    private int siguienteId(int maximo) {
+        try {
+            return Math.addExact(maximo, 1);
+        } catch (ArithmeticException e) {
+            throw new ErrorPersistencia("No quedan IDs disponibles.", e);
+        }
+    }
+
+    private Set<Integer> idsClientes() {
+        Set<Integer> ids = new HashSet<>();
+        for (Clientes cliente : buscarClientes()) {
+            ids.add(cliente.getId());
+        }
+        return ids;
+    }
+
+    private void validarRelaciones(List<Pagos> pagos) {
+        Set<Integer> ids = idsClientes();
+        for (Pagos pago : pagos) {
+            if (!ids.contains(pago.getIdentificadorCliente())) {
+                throw new ErrorPersistencia("Un pago referencia a un cliente inexistente.");
+            }
         }
     }
 

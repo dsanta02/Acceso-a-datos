@@ -1,3 +1,13 @@
+package gasolinera;
+
+import gasolinera.console.AplicacionConsola;
+import gasolinera.migration.MigraCSVToJson;
+import gasolinera.persistence.ErrorPersistencia;
+import gasolinera.persistence.csv.Ficheros;
+import gasolinera.persistence.json.Jsons;
+import gasolinera.repository.ClienteRepository;
+import gasolinera.repository.PagoRepository;
+
 import java.nio.file.Files;
 import java.util.Scanner;
 
@@ -36,7 +46,7 @@ public class Main {
         }
 
         try {
-            new aplicacionConsola(sc, clientes, pagos).ejecutar();
+            new AplicacionConsola(sc, clientes, pagos).ejecutar();
         } catch (ErrorPersistencia e) {
             System.out.println("No se puede iniciar la aplicación: " + e.getMessage());
         } finally {

@@ -2,6 +2,16 @@
 
 Aplicación de consola en Java 21 para registrar clientes y pagos de repostaje.
 
+## Estructura Java
+
+- `gasolinera.model`: entidades `Clientes` y `Pagos`.
+- `gasolinera.repository`: contratos para clientes y pagos.
+- `gasolinera.service`: gestión de clientes y pagos.
+- `gasolinera.persistence.csv` y `gasolinera.persistence.json`: implementaciones de almacenamiento.
+- `gasolinera.migration`: migración de CSV a JSON.
+- `gasolinera.console`: interfaz de consola.
+- `gasolinera.Main`: punto de entrada y selección de almacenamiento.
+
 ## Funcionalidades
 
 - Dar de alta, listar y buscar clientes.

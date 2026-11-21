@@ -1,3 +1,11 @@
+package gasolinera.migration;
+
+import gasolinera.model.Clientes;
+import gasolinera.model.Pagos;
+import gasolinera.persistence.ErrorPersistencia;
+import gasolinera.persistence.csv.Ficheros;
+import gasolinera.persistence.json.Jsons;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,8 +57,8 @@ public class MigraCSVToJson {
 
             Path backup = crearCopiasDeSeguridad();
             try {
-                destino.guardarClientes(clientes);
-                destino.guardarPago(pagos);
+                destino.reemplazarClientes(clientes);
+                destino.reemplazarPagos(pagos);
             } catch (RuntimeException e) {
                 restaurarDesdeBackup(backup);
                 throw e;

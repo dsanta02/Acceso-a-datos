@@ -1,3 +1,5 @@
+package gasolinera.model;
+
 import java.time.LocalDate;
 
 public class Pagos {
@@ -15,6 +17,16 @@ public class Pagos {
 
         validarDatos(identificador, identificadorCliente, fecha, importe, litros, combustible);
         this.identificador = identificador;
+        this.identificadorCliente = identificadorCliente;
+        this.fecha = fecha;
+        this.importe = importe;
+        this.litros = litros;
+        this.combustible = validarCombustible(combustible);
+    }
+
+    public Pagos(int identificadorCliente, LocalDate fecha,
+                 double importe, double litros, String combustible) {
+        validarDatos(0, identificadorCliente, fecha, importe, litros, combustible);
         this.identificadorCliente = identificadorCliente;
         this.fecha = fecha;
         this.importe = importe;
@@ -75,15 +87,25 @@ public class Pagos {
     }
 
     public void validar() {
+        if (identificador <= 0) {
+            throw new IllegalArgumentException("El ID del pago debe ser positivo.");
+        }
         validarDatos(identificador, identificadorCliente, fecha,
                 importe, litros, combustible);
+    }
+
+    public void validarNuevo() {
+        if (identificador != 0) {
+            throw new IllegalArgumentException("Un pago nuevo no debe tener ID asignado.");
+        }
+        validarDatos(0, identificadorCliente, fecha, importe, litros, combustible);
     }
 
     private static void validarDatos(int identificador, int identificadorCliente,
                                      LocalDate fecha, double importe, double litros,
                                      String combustible) {
-        if (identificador <= 0 || identificadorCliente <= 0) {
-            throw new IllegalArgumentException("Los identificadores deben ser positivos.");
+        if (identificador < 0 || identificadorCliente <= 0) {
+            throw new IllegalArgumentException("Los identificadores no son válidos.");
         }
         if (fecha == null) {
             throw new IllegalArgumentException("La fecha no puede estar vacía.");
