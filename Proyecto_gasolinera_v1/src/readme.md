@@ -4,7 +4,15 @@ Aplicación de consola en Java 21 para registrar clientes y pagos de repostaje.
 
 ## Estructura Java
 
-- `gasolinera.model`: entidades `Clientes` y `Pagos`.
+- `gasolinera.model`: entidades heredadas `Clientes` y `Pagos` para mantener los formatos
+  CSV/JSON existentes.
+- `gasolinera.domain`: modelo ampliado, organizado por áreas funcionales (`station`, `staff`,
+  `customer`, `loyalty`, `catalog`, `sales`, `refueling`, `campaign`, `incident`, `pricing`
+  y elementos compartidos en `shared`).
+- `Producto` es una clase abstracta con `ProductoEnvasado` y `ProductoGranel`; valida cantidades
+  y calcula importes usando `BigDecimal` y redondeo `HALF_UP`.
+- `Venta` contiene sus líneas y pagos, controla los estados de preparación, confirmación y pago.
+  Las devoluciones sucesivas se registran desde `LineaVenta` usando el precio original.
 - `gasolinera.repository`: contratos para clientes y pagos.
 - `gasolinera.service`: gestión de clientes y pagos.
 - `gasolinera.persistence.csv` y `gasolinera.persistence.json`: implementaciones de almacenamiento.
@@ -37,3 +45,6 @@ Desde IntelliJ IDEA, ejecutar `Main` con el directorio de trabajo configurado en
 ```text
 mvn test
 ```
+
+Para ver el comportamiento de productos envasados y a granel sin persistencia, ejecutar
+`gasolinera.demo.DominioDemo`.
