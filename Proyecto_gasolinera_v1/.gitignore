@@ -44,3 +44,4 @@ build/
 
 ### Configuración local de IntelliJ IDEA ###
 .idea/dataSources.xml.idea/
+.idea/
