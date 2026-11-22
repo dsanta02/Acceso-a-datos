@@ -173,7 +173,7 @@ VALUES
     (3, 1, 2, 3, 1.000, 2.00, 2.00),
     (4, 2, 3, 1, 1.000, 3.25, 3.25),
     (5, 2, 2, 2, 1.000, 2.00, 2.00),
-    (6, 3, 5, 1, 1.250, 8.00, 10.00),
+    (6, 3, 5, 1, 1.25, 8.00, 10.00),
     (7, 4, 1, 1, 2.000, 1.50, 3.00),
     (8, 5, 6, 1, 1.000, 15.00, 15.00),
     (9, 5, 3, 2, 1.000, 3.25, 3.25),
@@ -186,8 +186,10 @@ VALUES
     (2, 1, '2026-10-10 10:17:00.000', 13.00, 'TARJETA'),
     (3, 2, '2026-10-10 11:21:00.000', 5.25, 'EFECTIVO'),
     (4, 5, '2026-10-12 09:01:00.000', 18.25, 'TARJETA'),
-    (5, 6, '2026-10-12 16:46:00.000', 6.50, 'OTRO');
--- La venta 3 conserva un cobro parcial de 4 euros y sigue CONFIRMADA.
+    (5, 6, '2026-10-12 16:46:00.000', 6.50, 'OTRO'),
+    (6, 3, '2026-10-11 12:05:00', 4.00, 'EFECTIVO');
+-- La venta 1 se cobra con dos pagos por un total de 23 euros. La venta 3
+-- conserva un cobro parcial de 4 de sus 10 euros y sigue CONFIRMADA.
 
 -- Dos devoluciones sucesivas de la misma línea; sus cantidades e importes
 -- acumulados coinciden, pero no exceden, lo originalmente vendido/cobrado.

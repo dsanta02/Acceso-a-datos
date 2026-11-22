@@ -23,12 +23,23 @@ SELECT p.modalidad, COUNT(*) AS productos
 FROM PRODUCTO p
 GROUP BY p.modalidad;
 
--- Debe mostrar los pagos múltiples de la venta 1 y el pago parcial de la venta 3.
+-- Debe mostrar dos pagos que suman 23 euros para la venta 1 y un pago parcial
+-- de 4 euros sobre 10 para la venta 3, que permanece CONFIRMADA.
 SELECT v.referencia_ticket, v.estado, v.importe_total,
        COALESCE(SUM(pv.importe), 0.00) AS importe_cobrado
 FROM VENTA v
 LEFT JOIN PAGO_VENTA pv ON pv.id_venta = v.id
 GROUP BY v.id, v.referencia_ticket, v.estado, v.importe_total
+ORDER BY v.id;
+
+-- Resultado esperado para la venta 3: CONFIRMADA, total 10.00, cobrado 4.00.
+-- Resultado esperado para la venta 1: PAGADA, total y cobrado 23.00.
+SELECT v.id, v.estado, v.importe_total,
+       COALESCE(SUM(pv.importe), 0.00) AS importe_cobrado
+FROM VENTA v
+LEFT JOIN PAGO_VENTA pv ON pv.id_venta = v.id
+WHERE v.id IN (1, 3)
+GROUP BY v.id, v.estado, v.importe_total
 ORDER BY v.id;
 
 -- Comprobar que líneas y cabeceras cuadran en los ejemplos.
