@@ -43,4 +43,4 @@ build/
 ~WRL*.tmp
 
 ### Configuración local de IntelliJ IDEA ###
-.idea/dataSources.xml
+.idea/dataSources.xml.idea/
